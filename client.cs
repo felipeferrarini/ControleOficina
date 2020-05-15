@@ -71,11 +71,11 @@ namespace ControleOficina
 
             if (doc.Length == 14)
             {
-                cliente.Document = doc.Substring(0, 2) + "." + doc.Substring(2, 3) + "." + doc.Substring(5, 3) + "/" + doc.Substring(8, 4) + "-" + doc.Substring(12, 2);
+                cliente.Document = Convert.ToUInt64(doc).ToString(@"00\.000\.000\/0000\-00");
             }
             else
             {
-                cliente.Document = doc.Substring(0, 3) + "." + doc.Substring(3, 3) + "." + doc.Substring(6, 3) + "-" + doc.Substring(9, 2);
+                cliente.Document = Convert.ToUInt64(doc).ToString(@"000\.000\.000\-00");
             }
 
             Console.WriteLine("Digite o Endereço (Rua, Número, Complemento, Bairro, Estado abrev.):");
@@ -108,7 +108,7 @@ namespace ControleOficina
                 }
                 else
                 {
-                    cliente.NumberFone = "(" + leitura.Substring(0, 2) + ")" + leitura.Substring(2, 5) + "-" + leitura.Substring(7, 4);
+                    cliente.NumberFone = Convert.ToUInt64(leitura).ToString(@"\(00\)00000\-0000");
                     error = false;
                 }
             }

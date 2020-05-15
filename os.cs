@@ -122,24 +122,54 @@ namespace ControleOficina
 
             return dados;
         }
-        public static void createOS(string pathOs, os novaOS, string leitura, string[] tipoVeiculo, string[] status)
+        public static void createOS(string pathOs, os novaOS, string cliente, string[] tipoVeiculo, string[] status)
         {
-            novaOS.Client = leitura;
+            bool error = true;
+            string leitura;
+            novaOS.Client = cliente;
             Console.WriteLine("Escolha o tipo de veiculo:\n 1 - Carro\n 2 - Moto");
-            novaOS.Type = tipoVeiculo[Convert.ToInt32(Console.ReadLine()) - 1];
-            Console.WriteLine("Digite a placa do Veiculo (Semente letras e números):");
+            while (error)
+            {
+                leitura = Console.ReadLine();
+                if (leitura == "1" || leitura == "2")
+                {
+                    error = false;
+                    novaOS.Type = tipoVeiculo[Convert.ToInt32(leitura) - 1];
+                }
+                else
+                {
+                    error = true;
+                    Console.WriteLine("Opção inválida!");
+                }
+            }
+            Console.WriteLine("Digite a placa do Veiculo:");
             novaOS.Plate = Console.ReadLine();
-            Console.WriteLine("Digite quantos dias irá durar (Previsão. Digite somente número):");
+            Console.WriteLine("Digite quantos dias irá durar o serviço (Somente uma Previsão):");
             novaOS.setDoneIn = Convert.ToInt32(Console.ReadLine());
+            error = true;
             Console.WriteLine("Defina um Status para a OS:\n 1 - {0}\n 2 - {1}\n 3 - {2}\n 4 - {3}", status[0], status[1], status[2], status[3]);
-            novaOS.Status = status[Convert.ToInt32(Console.ReadLine()) - 1];
+            while (error)
+            {
+                leitura = Console.ReadLine();
+                if (leitura == "1" || leitura == "2" || leitura == "3" || leitura == "4")
+                {
+                    error = false;
+                    novaOS.Status = status[Convert.ToInt32(leitura) - 1];
+                }
+                else
+                {
+                    error = true;
+                    Console.WriteLine("Opção inválida!");
+                }
+            }
             Console.WriteLine("Faça a Descrição do Serviço: ");
-            novaOS.Description = Console.ReadLine();
+            leitura = Console.ReadLine();
+            leitura.Replace(",", ";");
+            novaOS.Description = leitura;
 
             StreamWriter bdW;
             bdW = File.AppendText(pathOs);
-            bdW.Write(novaOS.getNumero + "," + novaOS.Client + "," + novaOS.Type + "," + novaOS.Plate + "," + novaOS.CreatedAt + "," + novaOS.getDoneIn);
-            bdW.WriteLine("," + novaOS.DoneAt + "," + novaOS.Status + "," + novaOS.Description);
+            bdW.WriteLine(string.Join(",",os.returnAllAtributes(novaOS)));
             bdW.Close();
         }
         public static int getNextNumber(string path)
@@ -182,7 +212,7 @@ namespace ControleOficina
             bdR.Close();
 
         }
-        public static void editOS(string path, string id, string[] status)
+        public static void editOS(string path, string id, string[] status, string version)
         {
             bool error = true;
             string[] bd = File.ReadAllLines(path);
@@ -206,6 +236,9 @@ namespace ControleOficina
                 os osEdit = new os(Convert.ToInt32(line[0]), line[1], line[2], line[3], DateTime.Parse(line[4]), DateTime.Parse(line[5]), DateTime.Parse(line[6]), line[7], line[8]);
                 while (edit)
                 {
+                    Console.Clear();
+                    Console.WriteLine(version);
+                    Console.WriteLine("-> Editar Ordem de Serviço\n");
                     Console.WriteLine("Dados da OS:");
                     Console.WriteLine("    Número: {0}", osEdit.getNumero);
                     Console.WriteLine("1 - Documento do Cliente: {0}", osEdit.cliente);
@@ -336,7 +369,17 @@ namespace ControleOficina
                                 leitura = Console.ReadLine();
                                 if (leitura == "1" || leitura == "2" || leitura == "3" || leitura == "4")
                                 {
-                                    osEdit.Status = status[Convert.ToInt32(leitura)-1];
+                                    if (leitura == "4"){
+                                        osEdit.Status = status[Convert.ToInt32(leitura) - 1];
+                                        osEdit.DoneAt = DateTime.Now;
+                                        error = false;
+                                    }
+                                    else
+                                    {
+                                        osEdit.Status = status[Convert.ToInt32(leitura) - 1];
+                                        error = false;
+                                    }
+                                    
                                 }
                                 else
                                 {

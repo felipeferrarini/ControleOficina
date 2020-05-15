@@ -11,6 +11,7 @@ using System.Reflection.Metadata;
 using System.Net.Sockets;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Microsoft.Win32.SafeHandles;
+using System.Threading;
 
 namespace ControleOficina
 {
@@ -71,7 +72,18 @@ namespace ControleOficina
         }
         static void Main(string[] args)
         {
+            string version = "Controle De Oficina 0.8\n";
+            Console.Clear();
+            Console.Write("Carregando Sistema");
+            for (int i =0; i<7; i++)
+            {
+                Thread.Sleep(500);
+                Console.Write(".");
+            }
+            Console.Write("Carregado!");
+            Thread.Sleep(500);
             bool menu = true;
+            string menuback;
             StreamReader bdR;
             string pathOs = Directory.GetCurrentDirectory() + "\\bases\\baseOS.txt";
             string pathClient = Directory.GetCurrentDirectory() + "\\bases\\baseClientes.txt";
@@ -83,6 +95,9 @@ namespace ControleOficina
 
             while (menu)
             {
+                Console.Clear();
+                Console.WriteLine(version);
+                Console.WriteLine("-> Menu Principal\n");
                 Console.WriteLine("Escolha uma das Opções:" +
                     "\n 1 - Criar nova Ordem de Serviço" +
                     "\n 2 - Consultar Ordem de Serviço" +
@@ -90,20 +105,24 @@ namespace ControleOficina
                     "\n 4 - Cadastrar Cliente" +
                     "\n 5 - Sair");
                 opcao = Console.ReadLine();
+                //Criar nova Ordem de Serviço
                 if (opcao == "1")
                 {
+                    Console.Clear();
+                    Console.WriteLine(version);
+                    Console.WriteLine("-> Criar Ordem de Serviço\n");
                     string leitura;
                     bool error = true;
                     os novaOS = new os(pathOs);
                     int number = os.getNextNumber(pathOs);
                     Console.WriteLine("Ordem de Serviço Número: {0}!", number);
 
-                    Console.WriteLine("Informe o CPF ou CNPJ (Somente os números):");
+                    Console.WriteLine("Informe o CPF ou CNPJ do cliente(Somente os números):");
                     leitura = Console.ReadLine();
                     error = client.documentInvalid(leitura);
                     while (error)
                     {
-                        Console.WriteLine("Informe o CPF ou CNPJ (Somente os números):");
+                        Console.WriteLine("Informe o CPF ou CNPJ do cliente (Somente os números):");
                         leitura = Console.ReadLine();
                         error = client.documentInvalid(leitura);
                     }
@@ -131,16 +150,22 @@ namespace ControleOficina
                     }
                 }
                 else
+                //Consultar Ordem de Serviço
                 if (opcao == "2")
                 {
+                    Console.Clear();
+                    Console.WriteLine(version);
+                    Console.WriteLine("-> Menu de Consulta\n");
                     Console.WriteLine("Escolha uma das Opções:" +
                         "\n 1 - Consultar todas as OS's" +
                         "\n 2 - Filtrar por Número" +
                         "\n 3 - Filtrar por Cliente" +
                         "\n 4 - Filtrar por Status");
                     opcao = Console.ReadLine();
+                    //Consultar todas as OS's
                     if (opcao == "1")
                     {
+                        
                         int qtdLinhas = File.ReadLines(pathOs).Count();
                         string[,] dados = new string[qtdLinhas, qtdColunas];
 
@@ -159,12 +184,14 @@ namespace ControleOficina
                                 }
                             }
                         }
-
+                        Console.Clear();
                         showDados(dados, qtdLinhas, qtdColunas);
-
+                        Console.WriteLine("Precione qualquer tecla para voltar ao menu inicial...");
+                        menuback = Console.ReadLine();
                         bdR.Close();
                     }
                     else
+                    //Filtrar por Número
                     if (opcao == "2")
                     {
                         string id;
@@ -174,6 +201,7 @@ namespace ControleOficina
 
                     }
                     else
+                    //Filtrar por Cliente
                     if (opcao == "3")
                     {
                         bool error = true;
@@ -237,6 +265,7 @@ namespace ControleOficina
                         }
                     }
                     else
+                    //Filtrar por Status
                     if (opcao == "4")
                     {
                         Console.WriteLine("Escolha o Status:" +
@@ -271,14 +300,33 @@ namespace ControleOficina
                     }
                 }
                 else
+                //Editar Ordem de Serviço
                 if (opcao == "3")
                 {
-                    string id;
-                    Console.WriteLine("Digite o número da OS:");
-                    id = Console.ReadLine();
-                    os.editOS(pathOs, id, status);
+                    Console.Clear();
+                    Console.WriteLine(version);
+                    Console.WriteLine("-> Editar Ordem de Serviço\n");
+                    bool error = true;
+                    string leitura;
+                    Console.Write("Digite o número da OS: ");
+                    while (error)
+                    {
+                        leitura = Console.ReadLine();
+                        if (leitura.Length > 0)
+                        {
+                           
+                            os.editOS(pathOs, leitura, status, version);
+                            error = false;
+                        }
+                        else
+                        {
+                            Console.WriteLine("Digite um número válido!");
+                        }
+                    }
+                    
                 }
                 else
+                //Cadastrar Cliente
                 if (opcao == "4")
                 {
                     bool error = true;
