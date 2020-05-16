@@ -11,6 +11,8 @@ using System.Reflection.Metadata;
 using System.Net.Sockets;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Microsoft.Win32.SafeHandles;
+using System.Threading;
+using System.Text.RegularExpressions;
 
 namespace ControleOficina
 {
@@ -61,13 +63,41 @@ namespace ControleOficina
         }
 
         ////Funções Staticas
-        public static void createClient(client cliente, string path, string doc)
+        public static string[] returnAllAtributes(string path, string doc)
         {
+            if (doc.Length == 14)
+            {
+                doc = Convert.ToUInt64(doc).ToString(@"00\.000\.000\/0000\-00");
+            }
+            else
+            {
+                doc = Convert.ToUInt64(doc).ToString(@"000\.000\.000\-00");
+            }
+
+            string[] bd = File.ReadAllLines(path);
+            foreach(var element in bd)
+            {
+                string[] line = element.Split(",");
+                if (line[1] == doc)
+                {
+                    return line;
+                }
+            }
+
+            return bd;
+        }
+        public static void createClient(client cliente, string path, string doc, string version)
+        {
+            Console.Clear();
+            Console.WriteLine(version);
+            Console.WriteLine("-> Cadastro de Cliente\n");
             bool error = true;
             StreamWriter bdW;
             string leitura;
-            Console.WriteLine("Digite o nome:");
-            cliente.Name = Console.ReadLine();
+            Console.Write("Digite o nome: ");
+            leitura = Console.ReadLine();
+            leitura = leitura = Regex.Replace(leitura, "[\\,]", "");
+            cliente.Name = leitura;
 
             if (doc.Length == 14)
             {
@@ -78,17 +108,20 @@ namespace ControleOficina
                 cliente.Document = Convert.ToUInt64(doc).ToString(@"000\.000\.000\-00");
             }
 
-            Console.WriteLine("Digite o Endereço (Rua, Número, Complemento, Bairro, Estado abrev.):");
-            cliente.Address = Console.ReadLine();
+            Console.Write("\nDigite o Endereço (Rua, Número, Complemento, Bairro, Estado abrev.):");
+            leitura = Console.ReadLine();
+            leitura.Replace(",", ";");
+            cliente.Address = leitura;
 
             error = true;
             while (error)
             {
-                Console.WriteLine("Digite o endereço de e-mail (Exemplo: exemplo@email.com):");
+                Console.Write("\nDigite o endereço de e-mail (Exemplo: exemplo@email.com):");
                 leitura = Console.ReadLine();
-                if (leitura.Contains("@") != true)
+                leitura.Replace(",", "");
+                if (leitura.Contains("@") == false && leitura.Contains(".") == false)
                 {
-                    Console.WriteLine("E-mail inválido!");
+                    Console.WriteLine("\nE-mail inválido!");
                 }
                 else
                 {
@@ -100,14 +133,16 @@ namespace ControleOficina
             error = true;
             while (error)
             {
-                Console.WriteLine("Digite o número de telefone(Somente os números com DDD):");
+                Console.Write("\nDigite o número de telefone(Com DDD): ");
                 leitura = Console.ReadLine();
+                leitura = Regex.Replace(leitura, "[\\(\\)\\-\\ ]", "");
                 if (leitura.Length != 11)
                 {
-                    Console.WriteLine("Número de telefone inválido. Digite no seguinte formato: 27996342390");
+                    Console.WriteLine("\nNúmero de telefone inválido. Digite no seguinte formato: 27996342390");
                 }
                 else
                 {
+                    
                     cliente.NumberFone = Convert.ToUInt64(leitura).ToString(@"\(00\)00000\-0000");
                     error = false;
                 }
@@ -117,6 +152,9 @@ namespace ControleOficina
             bdW = File.AppendText(path);
             bdW.WriteLine(cliente.Name + "," + cliente.Document + "," + cliente.Address + "," + cliente.Email + "," + cliente.NumberFone);
             bdW.Close();
+            Console.Clear();
+            Console.WriteLine("\n\n     Cliente Cadastrado com Sucesso!");
+            Thread.Sleep(1500);
         }
 
         public static bool documentInvalid(string doc)
@@ -125,7 +163,7 @@ namespace ControleOficina
             {
                 if (doc.Length != 14)
                 {
-                    Console.WriteLine("CNPJ Inválido");
+                    Console.WriteLine("CNPJ Inválido!\n");
                     return true;
                 }
                 else
@@ -137,7 +175,7 @@ namespace ControleOficina
             {
                 if (doc.Length != 11)
                 {
-                    Console.WriteLine("CPF Inválido");
+                    Console.WriteLine("CPF Inválido!\n");
                     return true;
                 }
                 else

@@ -12,15 +12,20 @@ using System.Net.Sockets;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Microsoft.Win32.SafeHandles;
 using System.Threading;
+using System.Globalization;
+using System.Text.RegularExpressions;
 
 namespace ControleOficina
 {
     
     class Program
     {
-        public static void showDados(string[,] dados, int qtdLinhas, int qtdColunas)
+        public static void showDados(string[,] dados, int qtdLinhas, int qtdColunas, string version)
         {
-            Console.WriteLine(dados[0, 0]);
+            Console.Clear();
+            Console.WriteLine(version);
+            Console.WriteLine("-> Menu de Consulta\n");
+            Console.WriteLine("Para melhor visualização utiliza a tela maximizada!\n");
             Console.WriteLine("Número         |CPF/CNPJ       |Veiculo        |Placa          |Data Início    |Previsão       |Fim real       |Status         |Descrição      ");
             Console.WriteLine(new string('_', 142));
             for (int i = 0; i < qtdLinhas; i++)
@@ -42,9 +47,11 @@ namespace ControleOficina
                 Console.WriteLine();
             }
         }
-        public static void showDados(string[,] dados, int qtdLinhas, int qtdColunas, string status)
+        public static void showDados(string[,] dados, int qtdLinhas, int qtdColunas, string status, string version)
         {
-            Console.WriteLine(dados[0, 0]);
+            Console.Clear();
+            Console.WriteLine(version);
+            Console.WriteLine("-> Menu de Consulta\n");
             Console.WriteLine("Número         |CPF/CNPJ       |Veiculo        |Placa          |Data Início    |Previsão       |Fim real       |Status         |Descrição      ");
             Console.WriteLine(new string('_', 142));
             for (int i = 0; i < qtdLinhas; i++)
@@ -111,31 +118,29 @@ namespace ControleOficina
                     Console.Clear();
                     Console.WriteLine(version);
                     Console.WriteLine("-> Criar Ordem de Serviço\n");
-                    string leitura;
+                    string leitura = "";
                     bool error = true;
                     os novaOS = new os(pathOs);
                     int number = os.getNextNumber(pathOs);
                     Console.WriteLine("Ordem de Serviço Número: {0}!", number);
 
-                    Console.WriteLine("Informe o CPF ou CNPJ do cliente(Somente os números):");
-                    leitura = Console.ReadLine();
-                    error = client.documentInvalid(leitura);
                     while (error)
                     {
-                        Console.WriteLine("Informe o CPF ou CNPJ do cliente (Somente os números):");
+                        Console.Write("Informe o CPF ou CNPJ do cliente (Somente os números): ");
                         leitura = Console.ReadLine();
+                        Console.WriteLine("");
                         error = client.documentInvalid(leitura);
                     }
 
                     if (client.documentExist(leitura, pathClient) == false)
                     {
-                        Console.WriteLine("Cliente não Cadastrado!");
+                        Console.WriteLine("Cliente não Cadastrado!\n");
                         Console.WriteLine("Deseja cadastra-lo?\n 1 - Sim\n 2 - Não");
                         opcao = Console.ReadLine();
                         if (opcao == "1")
                         {
                             client cliente = new client();
-                            client.createClient(cliente, pathClient, leitura);
+                            client.createClient(cliente, pathClient, leitura, version);
                         }
                         else
                         {
@@ -165,40 +170,79 @@ namespace ControleOficina
                     //Consultar todas as OS's
                     if (opcao == "1")
                     {
-                        
                         int qtdLinhas = File.ReadLines(pathOs).Count();
-                        string[,] dados = new string[qtdLinhas, qtdColunas];
-
-                        bdR = File.OpenText(pathOs);
-
-                        while (bdR.EndOfStream != true)
+                        if(qtdLinhas == 0)
                         {
-                            for (int i = 0; i < qtdLinhas; i++)
+                            Console.Clear();
+                            Console.WriteLine("Nenhuma Ordem de serviço localizada!");
+                            Console.WriteLine("\n\n Precione qualquer tecla para voltar ao menu inicial...");
+                            menuback = Console.ReadLine();
+                        }
+                        else
+                        {
+                            string[,] dados = new string[qtdLinhas, qtdColunas];
+                            string[] bd = File.ReadAllLines(pathOs);
+                            int i = 0, j = 0;
+                            foreach (var element in bd)
                             {
-                                string[] linha = System.Text.RegularExpressions.Regex.Split(bdR.ReadLine(), ",");
-                                int j = 0;
-                                foreach (var element in linha)
+                                string[] line = element.Split(",");
+                                foreach (var element2 in line)
                                 {
-                                    dados[i, j] = element;
+                                    dados[i, j] = line[j];
                                     j++;
                                 }
+                                i++;
                             }
-                        }
-                        Console.Clear();
-                        showDados(dados, qtdLinhas, qtdColunas);
-                        Console.WriteLine("Precione qualquer tecla para voltar ao menu inicial...");
-                        menuback = Console.ReadLine();
-                        bdR.Close();
+                            Console.Clear();
+                            showDados(dados, qtdLinhas, qtdColunas, version);
+                            Console.WriteLine("\nPrecione qualquer tecla para voltar ao menu inicial...");
+                            menuback = Console.ReadLine();
+                        }                        
                     }
                     else
                     //Filtrar por Número
                     if (opcao == "2")
                     {
+                        bool error = true;
                         string id;
-                        Console.WriteLine("Digite o número da OS:");
-                        id = Console.ReadLine();
-                        os.consultOSComplet(pathOs, id);
 
+                        while (error)
+                        {
+                            Console.WriteLine("Digite o número da OS ou 0 para voltar ao menu inicial:");
+                            id = Console.ReadLine();
+                            if (id == "0")
+                            {
+                                error = false;
+                            }
+                            else
+                            {
+                                
+                                string[] linha = os.returnAllAtributes(pathOs, id);
+                                if (linha[0] == "nd")
+                                {
+                                    Console.WriteLine("Ordem de serviço não encontrada!");
+                                }
+                                else
+                                {
+                                    Console.Clear();
+                                    Console.WriteLine(version);
+                                    Console.WriteLine("-> Menu de Consulta\n");
+                                    Console.WriteLine("\nDados da OS:\n");
+                                    Console.WriteLine("     Número: {0}", linha[0]);
+                                    Console.WriteLine("     Documento do Cliente: {0}", linha[1]);
+                                    Console.WriteLine("     Tipo de Veiculo: {0}", linha[2]);
+                                    Console.WriteLine("     Placa: {0}", linha[3]);
+                                    Console.WriteLine("     Início do Serviço: {0}", linha[4]);
+                                    Console.WriteLine("     Previsão de Conclusão: {0}", linha[5]);
+                                    Console.WriteLine("     Fim Real do Serviço: {0}", linha[6]);
+                                    Console.WriteLine("     Status: {0}", linha[7]);
+                                    Console.WriteLine("     Descrição completa: {0}", linha[8]);
+                                    Console.WriteLine("\n\n Digite qualquer tecla para voltar ao menu inicial...");
+                                    id = Console.ReadLine();
+                                    error = false;
+                                }
+                            }                            
+                        }                        
                     }
                     else
                     //Filtrar por Cliente
@@ -207,96 +251,141 @@ namespace ControleOficina
                         bool error = true;
                         string leitura = "";
                         int cont = 0;
-                        Console.WriteLine("Digite o CPF ou CNPJ do cliente (Somente números):");
-                        
+
                         while (error)
                         {
+                            Console.WriteLine("Digite o CPF ou CNPJ do cliente (Somente números) ou 0 para voltar ao menu inicial:");
                             leitura = Console.ReadLine();
-                            if (leitura.Length == 14 || leitura.Length == 11)
+                            if (leitura == "0")
                             {
                                 error = false;
-                                if (leitura.Length == 14)
-                                {
-                                    leitura = leitura.Substring(0, 2) + "." + leitura.Substring(2, 3) + "." + leitura.Substring(5, 3) + "/" + leitura.Substring(8, 4) + "-" + leitura.Substring(12, 2);
-                                }
-                                else
-                                {
-                                    leitura = leitura.Substring(0, 3) + "." + leitura.Substring(3, 3) + "." + leitura.Substring(6, 3) + "-" + leitura.Substring(9, 2);
-                                }
                             }
                             else
                             {
-                                Console.WriteLine("CPF ou CNPJ inválido");
-                                error = true;
-                            }
-                        }
-
-                        string[] bd = File.ReadAllLines(pathOs);
-                        foreach (var element in bd)
-                        {
-                            string[] line = element.Split(",");
-                            if (line[1].Contains(leitura))
-                            {
-                                cont++;
-                            }
-                        }
-                        if (cont == 0)
-                        {
-                            Console.WriteLine("Nenhum OS encontrada para o cliente!");
-                        }
-                        else
-                        {
-                            string[,] bd2 = new string[cont, 9];
-                            int cont2 = 0;
-                            foreach (var element in bd)
-                            {
-                                string[] line = element.Split(",");
-                                if (line[1].Contains(leitura))
+                                leitura = leitura = Regex.Replace(leitura, "[\\,\\/\\-\\ \\.]", "");
+                                if (leitura.Length == 14 || leitura.Length == 11)
                                 {
-                                    for(int i = 0; i < 9; i++)
+                                    error = false;
+                                    if (leitura.Length == 14)
                                     {
-                                        bd2[cont2, i] = line[i];
+                                        leitura = Convert.ToUInt64(leitura).ToString(@"00\.000\.000\/0000\-00");
                                     }
-                                    cont2++;
+                                    else
+                                    {
+                                        leitura = Convert.ToUInt64(leitura).ToString(@"000\.000\.000\-00");
+                                    }
+                                    string[] bd = File.ReadAllLines(pathOs);
+                                    foreach (var element in bd)
+                                    {
+                                        string[] line = element.Split(",");
+                                        if (line[1].Contains(leitura))
+                                        {
+                                            cont++;
+                                        }
+                                    }
+                                    if (cont == 0)
+                                    {
+                                        Console.Clear();
+                                        Console.WriteLine("\n\n     Nenhum OS encontrada para o cliente!");
+                                        Console.WriteLine("\n\n Precione qualquer tecla para voltar ao menu inicial!");
+                                        leitura = Console.ReadLine();
+                                    }
+                                    else
+                                    {
+                                        string[,] bd2 = new string[cont, 9];
+                                        int cont2 = 0;
+                                        foreach (var element in bd)
+                                        {
+                                            string[] line = element.Split(",");
+                                            if (line[1].Contains(leitura))
+                                            {
+                                                for (int i = 0; i < 9; i++)
+                                                {
+                                                    bd2[cont2, i] = line[i];
+                                                }
+                                                cont2++;
+                                            }
+                                        }
+
+                                        showDados(bd2, cont, 9, version);
+                                        Console.WriteLine("\n\n Precione qualquer tecla para voltar ao menu inicial...");
+                                        leitura = Console.ReadLine();
+                                    }
+                                }
+                                else
+                                {
+                                    Console.WriteLine("CPF ou CNPJ inválido");
+                                    error = true;
                                 }
                             }
-
-                            showDados(bd2, cont, 9);
-                        }
+                        }                        
                     }
                     else
                     //Filtrar por Status
                     if (opcao == "4")
                     {
+                        bool error = true;
+                        string ler;
+                        int qtdLinhas = 0;
+                        Console.Clear();
+                        Console.WriteLine(version);
+                        Console.WriteLine("-> Menu de Consulta\n");
                         Console.WriteLine("Escolha o Status:" +
                             "\n 1 - {0}" +
                             "\n 2 - {1}" +
                             "\n 3 - {2}" +
                             "\n 4 - {3}", status[0], status[1], status[2], status[3]);
-                        int leitura = Convert.ToInt32(Console.ReadLine());
-
-                        int qtdLinhas = File.ReadLines(pathOs).Count();
-                        string[,] dados = new string[qtdLinhas, qtdColunas];
-
-                        bdR = File.OpenText(pathOs);
-
-                        while (bdR.EndOfStream != true)
+                        while (error)
                         {
-                            for (int i = 0; i < qtdLinhas; i++)
+                            int leitura = Convert.ToInt32(Console.ReadLine());
+                            if (leitura < 0 || leitura > 4)
                             {
-                                string[] linha = System.Text.RegularExpressions.Regex.Split(bdR.ReadLine(), ",");
-                                int j = 0;
-                                foreach (var element in linha)
+                                Console.WriteLine("\nOpção Inválida!\n");
+                            }
+                            else
+                            {
+                                error = false;
+                                string[] bd = File.ReadAllLines(pathOs);
+                                foreach (var element in bd)
                                 {
-                                    dados[i, j] = element;
-                                    j++;
+                                    if (element.Contains(status[leitura - 1]))
+                                    {
+                                        qtdLinhas++;
+                                    }
+                                }
+                                if (qtdLinhas == 0)
+                                {
+                                    Console.Clear();
+                                    Console.WriteLine("\n\n     Nenhuma Ordem de Serviço encontrada no status selecionado!");
+                                    Console.WriteLine("\n\n Precione qualquer tecla para voltar ao menu inicial...");
+                                    ler = Console.ReadLine();
+                                }
+                                else
+                                {
+                                    string[,] dados = new string[qtdLinhas, qtdColunas];
+                                    int i = 0;
+                                    foreach (var element in bd)
+                                    {
+                                        if (element.Contains(status[leitura - 1]))
+                                        {
+                                            string[] line = element.Split(",");
+                                            for (int j = 0; j < 9; j++)
+                                            {
+                                                dados[i, j] = line[j];
+                                            }
+                                            i++;
+                                        }
+                                    }
+
+
+                                    showDados(dados, qtdLinhas, qtdColunas, status[leitura - 1]);
+                                    Console.WriteLine("\n\n Precione qualquer tecla para voltar ao menu inicial...");
+                                    ler = Console.ReadLine();
                                 }
                             }
                         }
-
-                        showDados(dados, qtdLinhas, qtdColunas, status[leitura - 1]);
-
-                        bdR.Close();
+                        
+                        
                     }
                 }
                 else
@@ -329,6 +418,7 @@ namespace ControleOficina
                 //Cadastrar Cliente
                 if (opcao == "4")
                 {
+                    string ler;
                     bool error = true;
                     string leitura;
                     Console.WriteLine("Informe o CPF ou CNPJ (Somente os números):");
@@ -343,12 +433,23 @@ namespace ControleOficina
 
                     if (client.documentExist(leitura, pathClient) == true)
                     {
-                        Console.WriteLine("Cliente já Cadastrado!");
+                        Console.Clear();
+                        Console.WriteLine("     \n\nCliente já Cadastrado!\n");
+                        string[] dados = client.returnAllAtributes(pathClient, leitura);
+                        Console.WriteLine("   Nome do cliente: {0}", dados[0]);
+                        Console.WriteLine("   CPF/CNPJ: {0}", dados[1]);
+                        Console.WriteLine("   Endereço: {0}", dados[2]);
+                        Console.WriteLine("   E-mail: {0}", dados[3]);
+                        Console.WriteLine("   Telefone: {0}", dados[4]);
+                        Console.WriteLine("\nDigite qualquer tecla para voltar ao menu inicial...");
+                        ler = Console.ReadLine();
+
+
                     }
                     else
                     {
                         client cliente = new client();
-                        client.createClient(cliente, pathClient, leitura);
+                        client.createClient(cliente, pathClient, leitura, version);
                     }
                 }else
                 if(opcao == "5")

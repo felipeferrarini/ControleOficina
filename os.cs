@@ -7,6 +7,7 @@ using System.Runtime.InteropServices.ComTypes;
 using System.Linq.Expressions;
 using System.Runtime.InteropServices;
 using System.Reflection;
+using System.Threading;
 
 namespace ControleOficina
 {
@@ -122,6 +123,20 @@ namespace ControleOficina
 
             return dados;
         }
+        public static string[] returnAllAtributes(string path,string id)
+        {
+            string[] bd = File.ReadAllLines(path);
+            foreach(var element in bd)
+            {
+                string[] line = element.Split(",");
+                if (line[0] == id)
+                {
+                    return line;
+                }
+            }
+            string[] erro = { "nd", "0", "0", "0", "0", "0", "0", "0" };
+            return erro;
+        }
         public static void createOS(string pathOs, os novaOS, string cliente, string[] tipoVeiculo, string[] status)
         {
             bool error = true;
@@ -142,11 +157,14 @@ namespace ControleOficina
                     Console.WriteLine("Opção inválida!");
                 }
             }
+            Console.WriteLine("");
             Console.WriteLine("Digite a placa do Veiculo:");
             novaOS.Plate = Console.ReadLine();
+            Console.WriteLine("");
             Console.WriteLine("Digite quantos dias irá durar o serviço (Somente uma Previsão):");
             novaOS.setDoneIn = Convert.ToInt32(Console.ReadLine());
             error = true;
+            Console.WriteLine("");
             Console.WriteLine("Defina um Status para a OS:\n 1 - {0}\n 2 - {1}\n 3 - {2}\n 4 - {3}", status[0], status[1], status[2], status[3]);
             while (error)
             {
@@ -162,6 +180,7 @@ namespace ControleOficina
                     Console.WriteLine("Opção inválida!");
                 }
             }
+            Console.WriteLine("");
             Console.WriteLine("Faça a Descrição do Serviço: ");
             leitura = Console.ReadLine();
             leitura.Replace(",", ";");
@@ -171,6 +190,9 @@ namespace ControleOficina
             bdW = File.AppendText(pathOs);
             bdW.WriteLine(string.Join(",",os.returnAllAtributes(novaOS)));
             bdW.Close();
+            Console.Clear();
+            Console.WriteLine("\n\n     Ordem de Serviço Criada!");
+            Thread.Sleep(1000);
         }
         public static int getNextNumber(string path)
         {
@@ -178,40 +200,7 @@ namespace ControleOficina
             nextNumber++;
             return nextNumber;
         }
-        public static void consultOSComplet (string path, string id)
-        {
-            bool error = true;
-            StreamReader bdR;
-            bdR = File.OpenText(path);
 
-            while (bdR.EndOfStream != true)
-            {
-                string[] linha = System.Text.RegularExpressions.Regex.Split(bdR.ReadLine(), ",");
-                foreach (var element in linha)
-                {
-                    if (element == id)
-                    {
-                        Console.WriteLine("Dados da OS:");
-                        Console.WriteLine("Número: {0}", linha[0]);
-                        Console.WriteLine("Documento do Cliente: {0}", linha[1]);
-                        Console.WriteLine("Tipo de Veiculo: {0}", linha[2]);
-                        Console.WriteLine("Placa: {0}", linha[3]);
-                        Console.WriteLine("Início do Serviço: {0}", linha[4]);
-                        Console.WriteLine("Previsão de Conclusão: {0}", linha[5]);
-                        Console.WriteLine("Fim Real do Serviço: {0}", linha[6]);
-                        Console.WriteLine("Status: {0}", linha[7]);
-                        Console.WriteLine("Descrição completa: {0}", linha[8]);
-                        error = false;
-                    }
-                }
-            }
-            if (error == true)
-            {
-                Console.WriteLine("Ordem de Serviço não encontrada!");
-            }
-            bdR.Close();
-
-        }
         public static void editOS(string path, string id, string[] status, string version)
         {
             bool error = true;
