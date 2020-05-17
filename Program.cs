@@ -27,7 +27,7 @@ namespace ControleOficina
             Console.Clear();
             Console.WriteLine(version);
             Console.WriteLine("-> Menu de Consulta\n");
-            Console.WriteLine("Para melhor visualização utiliza a tela maximizada!\n");
+            Console.WriteLine("\n\n PARA MELHOR VISUALIZAÇÃO UTILIZE A TELA MAXIMIZADA!\n");
             Console.WriteLine("Número         |CPF/CNPJ       |Veiculo        |Placa          |Data Início    |Previsão       |Fim real       |Status         |Descrição      ");
             Console.WriteLine(new string('_', 142));
             for (int i = 0; i < qtdLinhas; i++)
@@ -54,6 +54,7 @@ namespace ControleOficina
             Console.Clear();
             Console.WriteLine(version);
             Console.WriteLine("-> Menu de Consulta\n");
+            Console.WriteLine("\n\n PARA MELHOR VISUALIZAÇÃO UTILIZE A TELA MAXIMIZADA!\n");
             Console.WriteLine("Número         |CPF/CNPJ       |Veiculo        |Placa          |Data Início    |Previsão       |Fim real       |Status         |Descrição      ");
             Console.WriteLine(new string('_', 142));
             for (int i = 0; i < qtdLinhas; i++)
@@ -123,7 +124,7 @@ namespace ControleOficina
                     "\n 1 - Criar nova Ordem de Serviço" +
                     "\n 2 - Consultar Ordem de Serviço" +
                     "\n 3 - Editar Ordem de Serviço" +
-                    "\n 4 - Cadastrar Cliente" +
+                    "\n 4 - Gerenciar Clientes" +
                     "\n 5 - Gerar Comprovante de Pagamento"+
                     "\n 6 - Sair");
                 opcao = Console.ReadLine();
@@ -186,9 +187,6 @@ namespace ControleOficina
                     if (opcao == "1")
                     {
                         int qtdLinhas = File.ReadLines(pathOs).Count();
-                        Console.WriteLine(qtdLinhas);
-                        Console.WriteLine("ate aqui");
-                        opcao = Console.ReadLine();
                         if(qtdLinhas == 0)
                         {
                             Console.Clear();
@@ -437,38 +435,74 @@ namespace ControleOficina
                 //Cadastrar Cliente
                 if (opcao == "4")
                 {
-                    string ler;
-                    bool error = true;
-                    string leitura;
-                    Console.WriteLine("Informe o CPF ou CNPJ (Somente os números):");
-                    leitura = Console.ReadLine();
-                    error = client.documentInvalid(leitura);
-                    while (error)
+                    Console.Clear();
+                    Console.WriteLine(version);
+                    Console.WriteLine("-> Gerenciar Clientes\n");
+                    Console.WriteLine("Escolha uma das Opções:" +
+                    "\n 1 - Cadastrar Cliente" +
+                    "\n 2 - Consultar Todos os Clientes" +
+                    "\n 3 - Voltar ao menu inicial");
+                    opcao = Console.ReadLine();
+                    if (opcao == "1")
                     {
+                        string ler;
+                        bool error = true;
+                        string leitura;
                         Console.WriteLine("Informe o CPF ou CNPJ (Somente os números):");
                         leitura = Console.ReadLine();
                         error = client.documentInvalid(leitura);
-                    }
+                        while (error)
+                        {
+                            Console.WriteLine("Informe o CPF ou CNPJ (Somente os números):");
+                            leitura = Console.ReadLine();
+                            error = client.documentInvalid(leitura);
+                        }
 
-                    if (client.documentExist(leitura, pathClient) == true)
-                    {
-                        Console.Clear();
-                        Console.WriteLine("     \n\nCliente já Cadastrado!\n");
-                        string[] dados = client.returnAllAtributes(pathClient, leitura);
-                        Console.WriteLine("   Nome do cliente: {0}", dados[0]);
-                        Console.WriteLine("   CPF/CNPJ: {0}", dados[1]);
-                        Console.WriteLine("   Endereço: {0}", dados[2]);
-                        Console.WriteLine("   E-mail: {0}", dados[3]);
-                        Console.WriteLine("   Telefone: {0}", dados[4]);
-                        Console.WriteLine("\nDigite qualquer tecla para voltar ao menu inicial...");
-                        ler = Console.ReadLine();
+                        if (client.documentExist(leitura, pathClient) == true)
+                        {
+                            Console.Clear();
+                            Console.WriteLine("     \n\nCliente já Cadastrado!\n");
+                            string[] dados = client.returnAllAtributes(pathClient, leitura);
+                            Console.WriteLine("   Nome do cliente: {0}", dados[0]);
+                            Console.WriteLine("   CPF/CNPJ: {0}", dados[1]);
+                            Console.WriteLine("   Endereço: {0}", dados[2]);
+                            Console.WriteLine("   E-mail: {0}", dados[3]);
+                            Console.WriteLine("   Telefone: {0}", dados[4]);
+                            Console.WriteLine("\nDigite qualquer tecla para voltar ao menu inicial...");
+                            ler = Console.ReadLine();
 
 
+                        }
+                        else
+                        {
+                            client cliente = new client();
+                            client.createClient(cliente, pathClient, leitura, version);
+                        }
                     }
                     else
-                    {
-                        client cliente = new client();
-                        client.createClient(cliente, pathClient, leitura, version);
+                    if (opcao == "2"){
+                        string espaco = "                        ";
+                        Console.Clear();
+                        Console.WriteLine(version);
+                        Console.WriteLine("-> Lista dos Clientes Cadastrados\n");
+                        Console.WriteLine("\n\n PARA MELHOR VISUALIZAÇÃO UTILIZE A TELA MAXIMIZADA!\n");
+                        Console.WriteLine("Nome                          |CPF/CNPJ          |E-mail                        |Telefone       ");
+                        Console.WriteLine("________________________________________________________________________________________________");
+                        string[] bd = File.ReadAllLines(pathClient);
+                        foreach(var element in bd)
+                        {
+                            string[] line = element.Split(",");
+                            Console.Write(line[0].Length >= 30 ? line[0].Substring(0, 30) : line[0] + espaco.Substring(0, 30 - line[0].Length));
+                            Console.Write("|");
+                            Console.Write(line[1].Length > 15 ? line[1] : line[1] + espaco.Substring(0, 18 - line[1].Length));
+                            Console.Write("|");
+                            Console.Write(line[3].Length >= 30 ? line[3].Substring(0, 30) : line[3] + espaco.Substring(0, 30 - line[3].Length));
+                            Console.Write("|");
+                            Console.Write(line[4]);
+                            Console.WriteLine();
+                        }
+                        Console.WriteLine("\n\n Precione qualquer tecla para voltar ao menu inicial...");
+                        opcao = Console.ReadLine();
                     }
                 }else
                 if(opcao == "5")
