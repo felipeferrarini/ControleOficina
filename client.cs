@@ -34,6 +34,14 @@ namespace ControleOficina
             email = "example@email.com";
             numberFone = "(27) 99999-9999";
         }
+        public client(string nome, string doc, string add,string emaill, string number)
+        {
+            name = nome;
+            document = doc;
+            address = add;
+            email = emaill;
+            numberFone = number;
+        }
 
         //Funções publicas
         public string Name
@@ -65,15 +73,17 @@ namespace ControleOficina
         ////Funções Staticas
         public static string[] returnAllAtributes(string path, string doc)
         {
-            if (doc.Length == 14)
+            if (!doc.Contains("."))
             {
-                doc = Convert.ToUInt64(doc).ToString(@"00\.000\.000\/0000\-00");
+                if (doc.Length == 14)
+                {
+                    doc = Convert.ToUInt64(doc).ToString(@"00\.000\.000\/0000\-00");
+                }
+                else
+                {
+                    doc = Convert.ToUInt64(doc).ToString(@"000\.000\.000\-00");
+                }
             }
-            else
-            {
-                doc = Convert.ToUInt64(doc).ToString(@"000\.000\.000\-00");
-            }
-
             string[] bd = File.ReadAllLines(path);
             foreach(var element in bd)
             {
@@ -83,8 +93,8 @@ namespace ControleOficina
                     return line;
                 }
             }
-
-            return bd;
+            string[] erro = { "nd" };
+            return erro;
         }
         public static void createClient(client cliente, string path, string doc, string version)
         {
@@ -110,7 +120,7 @@ namespace ControleOficina
 
             Console.Write("\nDigite o Endereço (Rua, Número, Complemento, Bairro, Estado abrev.):");
             leitura = Console.ReadLine();
-            leitura.Replace(",", ";");
+            leitura = leitura.Replace(",", ";");
             cliente.Address = leitura;
 
             error = true;
@@ -118,8 +128,8 @@ namespace ControleOficina
             {
                 Console.Write("\nDigite o endereço de e-mail (Exemplo: exemplo@email.com):");
                 leitura = Console.ReadLine();
-                leitura.Replace(",", "");
-                if (leitura.Contains("@") == false && leitura.Contains(".") == false)
+                leitura = leitura.Replace(",", "");
+                if (leitura.Contains("@") == false || leitura.Contains(".") == false)
                 {
                     Console.WriteLine("\nE-mail inválido!");
                 }
@@ -135,7 +145,7 @@ namespace ControleOficina
             {
                 Console.Write("\nDigite o número de telefone(Com DDD): ");
                 leitura = Console.ReadLine();
-                leitura = Regex.Replace(leitura, "[\\(\\)\\-\\ ]", "");
+                leitura = leitura = Regex.Replace(leitura, "[\\(\\)\\-\\ ]", "");
                 if (leitura.Length != 11)
                 {
                     Console.WriteLine("\nNúmero de telefone inválido. Digite no seguinte formato: 27996342390");
@@ -199,7 +209,7 @@ namespace ControleOficina
 
             while (bdR.EndOfStream != true)
             {
-                string[] linha = System.Text.RegularExpressions.Regex.Split(bdR.ReadLine(), ",");
+                string[] linha = bdR.ReadLine().Split(",");
                 foreach (var element in linha)
                 {
                     if (element == doc)

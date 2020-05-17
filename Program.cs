@@ -14,6 +14,8 @@ using Microsoft.Win32.SafeHandles;
 using System.Threading;
 using System.Globalization;
 using System.Text.RegularExpressions;
+using System.Xml.Schema;
+using Microsoft.VisualBasic;
 
 namespace ControleOficina
 {
@@ -79,6 +81,7 @@ namespace ControleOficina
         }
         static void Main(string[] args)
         {
+
             string version = "Controle De Oficina 0.8\n";
             Console.Clear();
             Console.Write("Carregando Sistema");
@@ -91,9 +94,20 @@ namespace ControleOficina
             Thread.Sleep(500);
             bool menu = true;
             string menuback;
-            StreamReader bdR;
-            string pathOs = Directory.GetCurrentDirectory() + "\\bases\\baseOS.txt";
-            string pathClient = Directory.GetCurrentDirectory() + "\\bases\\baseClientes.txt";
+            string pathOs = Directory.GetCurrentDirectory() + "\\baseOS.txt";
+            string pathClient = Directory.GetCurrentDirectory() + "\\baseClientes.txt";
+            if (!File.Exists(pathOs))
+            {
+                StreamWriter x;
+                x = File.CreateText(pathOs);
+                x.Close();
+            }
+            if (!File.Exists(pathClient))
+            {
+                StreamWriter x;
+                x = File.CreateText(pathClient);
+                x.Close();
+            }
             int qtdColunas = 9;
             string opcao;
             
@@ -110,7 +124,8 @@ namespace ControleOficina
                     "\n 2 - Consultar Ordem de Serviço" +
                     "\n 3 - Editar Ordem de Serviço" +
                     "\n 4 - Cadastrar Cliente" +
-                    "\n 5 - Sair");
+                    "\n 5 - Gerar Comprovante de Pagamento"+
+                    "\n 6 - Sair");
                 opcao = Console.ReadLine();
                 //Criar nova Ordem de Serviço
                 if (opcao == "1")
@@ -171,6 +186,9 @@ namespace ControleOficina
                     if (opcao == "1")
                     {
                         int qtdLinhas = File.ReadLines(pathOs).Count();
+                        Console.WriteLine(qtdLinhas);
+                        Console.WriteLine("ate aqui");
+                        opcao = Console.ReadLine();
                         if(qtdLinhas == 0)
                         {
                             Console.Clear();
@@ -192,6 +210,7 @@ namespace ControleOficina
                                     j++;
                                 }
                                 i++;
+                                j = 0;
                             }
                             Console.Clear();
                             showDados(dados, qtdLinhas, qtdColunas, version);
@@ -453,6 +472,67 @@ namespace ControleOficina
                     }
                 }else
                 if(opcao == "5")
+                {
+                    bool error = true;
+                    string leitura = "";
+                    double valor;
+                    while (error)
+                    {
+                        Console.Clear();
+                        Console.WriteLine(version);
+                        Console.WriteLine("-> Emitir Comprovante de Pagamento\n");
+                        Console.WriteLine("Informe o número da OS para gerar o comprovante ou 0 para sair: ");
+                        leitura = Console.ReadLine();
+                        if(leitura == "0")
+                        {
+                            error = false;
+                        }
+                        else
+                        {
+                            string[] dados = os.returnAllAtributes(pathOs, leitura);
+                            if (dados[0] == "nd")
+                            {
+                                Console.Clear();
+                                Console.WriteLine("     \n\nOrdem de Serviço Não Localizada!");
+                                Thread.Sleep(1000);
+                            }
+                            else
+                            {
+                                Comprovante recibo = new Comprovante(Convert.ToInt32(dados[0]), dados[1], dados[2], dados[3], DateTime.Parse(dados[4]), DateTime.Parse(dados[5]), DateTime.Parse(dados[6]), dados[7], dados[8]);
+                                Console.WriteLine("Informe a Forma de pagamento: ");
+                                leitura = Console.ReadLine();
+                                recibo.PaymentForm = leitura;
+                                while (error)
+                                {
+                                    Console.WriteLine("Informe o Valor do Serviço (R$): ");
+                                    leitura = Console.ReadLine().Replace(".", ",");
+                                    if (double.TryParse(leitura, out valor))
+                                    {
+                                        error = false;
+                                        valor = double.Parse(leitura, NumberStyles.Float);
+                                        recibo.Valor = valor;
+                                        if (recibo.printComprovante(pathClient))
+                                        {
+                                            Console.Clear();
+                                            Console.WriteLine("\n\n     Recibo Criado Com Sucesso! Vá até a pasta C:\\Comprovantes");
+                                            Console.WriteLine("\n\n Precione qualquer tecla para voltar ao menu inicial...");
+                                            leitura = Console.ReadLine();
+                                        }
+                                        else
+                                        {
+                                            Console.WriteLine("Ops, Algo deu Errado!");
+                                        }
+                                    }
+                                    else
+                                    {
+                                        Console.WriteLine("Valor Inválido");
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }else
+                if(opcao == "6")
                 {
                     break;
                 }

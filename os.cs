@@ -34,9 +34,9 @@ namespace ControleOficina
             description = "Sem dados";
         }
         // Construtor com parametros para edição e consulta de OS
-        public os(int name, string cli, string tipo, string placa, DateTime inicio, DateTime prev, DateTime fim, string stat, string descript)
+        public os(int number, string cli, string tipo, string placa, DateTime inicio, DateTime prev, DateTime fim, string stat, string descript)
         {
-            numero = name;
+            numero = number;
             cliente = cli;
             type = tipo;
             plate = placa;
@@ -183,7 +183,7 @@ namespace ControleOficina
             Console.WriteLine("");
             Console.WriteLine("Faça a Descrição do Serviço: ");
             leitura = Console.ReadLine();
-            leitura.Replace(",", ";");
+            leitura = leitura.Replace(",", ";");
             novaOS.Description = leitura;
 
             StreamWriter bdW;
@@ -390,6 +390,67 @@ namespace ControleOficina
                     }
                 }
             }
+        }
+    }
+    class Comprovante : os
+    {
+        //Atributos
+        protected double valor;
+        protected string paymentForm;
+
+        
+        //Construtor
+        public Comprovante(int number, string cli, string tipo, string placa, DateTime inicio, DateTime prev, DateTime fim, string stat, string descript) :base(number, cli, tipo, placa, inicio, prev, fim, stat, descript)
+        {
+            valor = 0.0;
+            paymentForm = "undefied";
+        }
+
+        //Variaveis publicas
+        public double Valor
+        {
+            get { return valor; }
+            set { valor = value; }
+        }
+        public string PaymentForm
+        {
+            get { return paymentForm; }
+            set { paymentForm = value; }
+        }
+        public bool printComprovante(string pathCliente)
+        {
+            if (!Directory.Exists("C:\\Comprovantes"))
+            {
+                Directory.CreateDirectory("C:\\Comprovantes\\");
+            }
+            StreamWriter x;
+            string file = "C:\\comprovantes\\Comprovante Nº " + numero + ".html";
+            x = File.CreateText(file);
+            x.Close();
+            string[] dadosCli = client.returnAllAtributes(pathCliente, cliente);
+            client clienteBD = new client(dadosCli[0], dadosCli[1], dadosCli[2], dadosCli[3], dadosCli[4]);
+            string[] dadosOS = {
+                "<div style=\"border: .2rem solid; text-align: left; width: 600px; display: flex; align-items: flex-start; flex-direction: column; padding: 20px;\">",
+                "  <span style=\"font-weight: bold; font-size: 1.2rem; margin-bottom: 10px;\">Comprovante de Pagamento Referênte a Ordem de Serviço Nº "+numero+"</span>",
+                "  <span>Cliente: "+clienteBD.Name+"</span>",
+                "  <span>CPF/CNPJ: "+clienteBD.Document+"</span>",
+                "  <span>Endereço: "+clienteBD.Address+"</span>",
+                "  <span>E-mail: "+clienteBD.Email+"</span>",
+                "  <span>Telefone: "+clienteBD.NumberFone+"</span>",
+                "  <span>Tipo de Veiculo: "+type+"</span>",
+                "  <span>Placa do Veiculo: "+plate+"</span>",
+                "  <span>Iniciado em: "+createdAt+"</span>",
+                "  <span>Finalizado em: "+doneAt+"</span>",
+                "  <span>Descrição do Serviço: "+description+"</span>",
+                "  <span>Forma de Pagamento: "+paymentForm+"</span>",
+                "  <span>Valor Pago: R$ "+valor+"</span>",
+                "</div>"
+            };
+
+            File.WriteAllLines(file,dadosOS);
+
+
+            return true;
         }
     }
 }
